@@ -171,12 +171,12 @@ class SentryAPI(object):
 
         for stat_name in stat_names:
             resp = self.__get(
-                "projects/{org}/{proj_slug}/stats/?stat={stat}&since={since}&until={until}".format(
+                "projects/{org}/{proj_slug}/stats/?stat={stat}&resolution={resolution}&since={since}".format(
                     org=org_slug,
                     proj_slug=project_slug,
                     stat=stat_name,
+                    resolution="1d",
                     since=first_day_month,
-                    until=today,
                 )
             )
             stats[stat_name] = resp.json()
