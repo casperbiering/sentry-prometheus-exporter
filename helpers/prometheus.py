@@ -13,7 +13,7 @@ from helpers.utils import get_cached, write_cache
 
 # constants for caching file
 JSON_CACHE_FILE = "/tmp/sentry-prometheus-exporter-cache.json"
-DEFAULT_CACHE_EXPIRE_TIMESTAMP = int(datetime.timestamp(datetime.now() + timedelta(minutes=2)))
+DEFAULT_CACHE_EXPIRE_INTERVAL = timedelta(minutes=60)
 
 log = logging.getLogger(__name__)
 
@@ -194,7 +194,8 @@ class SentryCollector(object):
 
             data["projects_data"] = projects_issue_data
 
-        write_cache(JSON_CACHE_FILE, data, DEFAULT_CACHE_EXPIRE_TIMESTAMP)
+        expire_timestamp = int(datetime.timestamp(datetime.now() + DEFAULT_CACHE_EXPIRE_INTERVAL))
+        write_cache(JSON_CACHE_FILE, data, expire_timestamp)
         log.debug("cache: writing data structure to file: {cache}".format(cache=JSON_CACHE_FILE))
         return data
 
