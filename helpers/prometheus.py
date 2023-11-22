@@ -196,20 +196,14 @@ class SentryCollector(object):
 
         expire_timestamp = int(datetime.timestamp(datetime.now() + DEFAULT_CACHE_EXPIRE_INTERVAL))
         write_cache(JSON_CACHE_FILE, data, expire_timestamp)
-        log.debug("cache: writing data structure to file: {cache}".format(cache=JSON_CACHE_FILE))
         return data
 
     def __build_sentry_data(self):
-
         data = get_cached(JSON_CACHE_FILE)
 
         if data is False:
-            log.debug("cache: {cache} not found.".format(cache=JSON_CACHE_FILE))
-            log.debug("cache: rebuilding from API...")
-            api_data = self.__build_sentry_data_from_api()
-            return api_data
+            data = self.__build_sentry_data_from_api()
 
-        log.debug("cache: reading data structure from file: {cache}".format(cache=JSON_CACHE_FILE))
         return data
 
     def collect(self):

@@ -21,6 +21,8 @@ def write_cache(filename, data, expire_timestamp=None):
     if not isinstance(data, dict):
         raise TypeError("project param isn't a dictionary")
 
+    log.debug("writing cache: {file}".format(file=filename))
+
     data.update({"expire_at": expire_timestamp})
     json.dump(data, open(filename, "w"))
 
@@ -30,8 +32,10 @@ def get_cached(filename):
     if os.path.isfile(filename):
         cache = json.load(open(filename, "r"))
         if cache.get("expire_at") <= datetime.timestamp(datetime.now()):
-            log.debug("cache: expired data, removing cache file: {file}".format(file=filename))
+            log.debug("cache: expired data, returning false: {file}".format(file=filename))
             return False
+
+        log.debug("using cached data: {file}".format(file=filename))
         return cache
     else:
         return False

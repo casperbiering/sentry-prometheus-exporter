@@ -3,6 +3,8 @@ from os import getenv
 
 from retry import retry
 import requests
+from requests_cache import CachedSession
+from datetime import timedelta
 
 retry_settings = {
     "tries": int(getenv("SENTRY_RETRY_TRIES", "3")),
@@ -34,12 +36,32 @@ class SentryAPI(object):
         super(SentryAPI, self).__init__()
         self.base_url = base_url
         self.__token = auth_token
-        self.__session = requests.Session()
+        self.__session = CachedSession(
+            'short_cache',
+            expire_after=timedelta(minutes=1),
+            use_temp=True,
+            backend='filesystem',
+            stale_if_error=True,
+            )
+        self.__session_long = CachedSession(
+            'long_cache',
+            expire_after=timedelta(minutes=60),
+            use_temp=True,
+            backend='filesystem',
+            stale_if_error=True,
+            )
 
     @retry(requests.exceptions.HTTPError, **retry_settings)
     def __get(self, url):
         HEADERS = {"Authorization": "Bearer " + self.__token}
         response = self.__session.get(self.base_url + url, headers=HEADERS)
+        response.raise_for_status()
+        return response
+
+    @retry(requests.exceptions.HTTPError, **retry_settings)
+    def __get_long(self, url):
+        HEADERS = {"Authorization": "Bearer " + self.__token}
+        response = self.__session_long.get(self.base_url + url, headers=HEADERS)
         response.raise_for_status()
         return response
 
@@ -49,7 +71,7 @@ class SentryAPI(object):
     def organizations(self):
         """Return a list of organizations."""
 
-        resp = self.__get("organizations/")
+        resp = self.__get_long("organizations/")
         organizations = []
         for org in resp.json():
             organization = {}
@@ -371,7 +393,7 @@ class SentryAPI(object):
         rate_limit_url = "projects/{org}/{proj_slug}/keys/".format(
             org=org_slug, proj_slug=project_slug
         )
-        resp = self.__get(rate_limit_url)
+        resp = self.__get_long(rate_limit_url)
         if resp.json()[0].get("rateLimit"):
             rate_limit_window = resp.json()[0].get("rateLimit").get("window")
             rate_limit_count = resp.json()[0].get("rateLimit").get("count")
