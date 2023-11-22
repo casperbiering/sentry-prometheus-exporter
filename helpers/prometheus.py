@@ -117,8 +117,8 @@ class SentryCollector(object):
                 project = self.__sentry_api.get_project(self.org.get("slug"), project_slug)
                 projects.append(project)
                 projects_slug.append(project_slug)
-                envs = self.__sentry_api.environments(self.org.get("slug"), project)
-                projects_envs[project.get("slug")] = envs
+                # envs = self.__sentry_api.environments(self.org.get("slug"), project)
+                # projects_envs[project.get("slug")] = envs
             log.info(
                 "metadata: projects loaded from API: {num_proj}".format(num_proj=len(projects))
             )
@@ -129,8 +129,8 @@ class SentryCollector(object):
             for project in self.__sentry_api.projects(self.sentry_org_slug):
                 projects.append(project)
                 projects_slug.append(project.get("slug"))
-                envs = self.__sentry_api.environments(self.org.get("slug"), project)
-                projects_envs[project.get("slug")] = envs
+                # envs = self.__sentry_api.environments(self.org.get("slug"), project)
+                # projects_envs[project.get("slug")] = envs
             log.info(
                 "metadata: projects loaded from API: {num_proj}".format(num_proj=len(projects))
             )
