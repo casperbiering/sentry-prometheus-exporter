@@ -148,8 +148,8 @@ class SentryAPI(object):
 
         return project
 
-    def project_stats(self, org_slug, project_slug):
-        """Retrieve event counts for a project
+    def org_stats(self, org_slug):
+        """Retrieve event counts for a organization.
 
         Return a set of points representing a normalized timestamp
         and the number of events seen in the period.
@@ -158,37 +158,30 @@ class SentryAPI(object):
 
         Args:
             org_slug: A organization's slug string name.
-            project_slug: The project's slug string name
 
         Returns:
-            A dict([list])
+            A dict(dict([list]))
         """
 
         first_day_month = datetime.timestamp(datetime.today().replace(day=1,hour=0,minute=0,second=0,microsecond=0))
-        stat_names = ["received", "rejected", "blacklisted"]
+        now = datetime.timestamp(datetime.now())
         stats = {}
-        project_events = {}
 
-        for stat_name in stat_names:
-            resp = self.__get(
-                "projects/{org}/{proj_slug}/stats/?stat={stat}&resolution={resolution}&since={since}".format(
-                    org=org_slug,
-                    proj_slug=project_slug,
-                    stat=stat_name,
-                    resolution="1d",
-                    since=first_day_month,
-                )
+        resp = self.__get(
+            "organizations/{org_slug}/stats-summary/?field=sum%28quantity%29&start={start}&end={end}".format(
+                org_slug=org_slug,
+                start=first_day_month,
+                end=now,
             )
-            stats[stat_name] = resp.json()
+        )
 
-        for stat_name, values in stats.items():
-            events = 0
-            for stat in values:
-                if type(stat) != str:
-                    events += stat[1]
-            project_events[stat_name] = events
+        summary = resp.json()
 
-        return project_events
+        for summary_project in summary["projects"]:
+            project_slug=summary_project["slug"]
+            stats[project_slug] = summary_project["stats"]
+
+        return stats
 
     def environments(self, org_slug, project):
         """Return a list of project's environments.

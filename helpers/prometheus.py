@@ -364,20 +364,31 @@ class SentryCollector(object):
                 "Total events counts per project",
                 labels=[
                     "project_slug",
-                    "stat",
+                    "category",
+                    "outcomes",
                 ],
             )
 
+            all_stats = self.__sentry_api.org_stats(self.org.get("slug"))
+
             for project in __metadata.get("projects"):
-                events = self.__sentry_api.project_stats(self.org.get("slug"), project.get("slug"))
-                for stat, value in events.items():
-                    project_events_metrics.add_metric(
-                        [
-                            str(project.get("slug")),
-                            str(stat),
-                        ],
-                        int(value),
-                    )
+                project_slug = project.get("slug")
+                if not project_slug in all_stats:
+                    log.info("project {project} not found in stats".format(project=project_slug))
+                    continue
+
+                stats = all_stats[project_slug]
+
+                for category in stats:
+                    for outcome, value in category["outcomes"].items():
+                        project_events_metrics.add_metric(
+                            [
+                                str(project_slug),
+                                str(category["category"]),
+                                str(outcome),
+                            ],
+                            int(value),
+                        )
 
             yield project_events_metrics
 
